@@ -7,7 +7,7 @@ A java library allowing to turn any JVM application into a [Web Native Messaging
 
 # Gotchas
 
-To date, [Web native messaging protocol](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_messaging) only supports `stdio` communication:
+To date, [web native messaging protocol](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_messaging) only supports `stdio` communication:
 - messages are sent to the native application's `stdin`  
 - messages are sent to the browser extension via native application's `stdout`
 
