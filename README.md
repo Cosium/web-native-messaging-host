@@ -15,7 +15,7 @@ Native application (e.g. your JVM application) instances started by the browser 
 
 As soon as a `Channel` is open, the current library will swap `System.in` and `System.out` for instances throwing exception on any interaction attempt coming from components foreign to the current library. On `Channel` shutdown, the library will swap back the standard `System.in` and `System.out` instances. The current library cannot cover the full application lifecycle, therefore it is only a best effort.
 
-Using `System.out` (e.g. for logging) before opening a `Channel` will trigger a fatal error on the browser side leading the end of the communication channel and the native application shutdown.
+Using `System.out` (e.g. for logging) before opening a `Channel` will probably trigger a fatal error on the browser side leading to the end of the communication channel and the native application shutdown.
 
 # Quick start
 
