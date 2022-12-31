@@ -35,6 +35,9 @@ class SystemErrLogger implements Logger {
    */
   private void print(String level, String message, Throwable throwable) {
     requireNonNull(level, "level is mandatory");
+    if (throwable != null && Objects.equals(throwable.getMessage(), message)) {
+      message = null;
+    }
     String log =
         Stream.of(
                 "[%s]".formatted(Thread.currentThread().getName()),
