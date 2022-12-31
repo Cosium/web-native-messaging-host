@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.cosium.web_native_messaging_host</groupId>
     <artifactId>web-native-messaging-host-parent</artifactId>
-    <version>2.2-SNAPSHOT</version>
+    <version>2.2</version>
   </parent>	 
 
   <artifactId>web-native-messaging-host</artifactId>
