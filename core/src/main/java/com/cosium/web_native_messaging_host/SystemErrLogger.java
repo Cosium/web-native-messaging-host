@@ -41,6 +41,11 @@ class SystemErrLogger implements Logger {
             .filter(Predicate.not(String::isBlank))
             .collect(Collectors.joining(" "));
     System.err.print(log);
-    Optional.ofNullable(throwable).ifPresent(t -> t.printStackTrace(System.err));
+    Optional.ofNullable(throwable)
+        .ifPresent(
+            t -> {
+              System.err.print(" ");
+              t.printStackTrace(System.err);
+            });
   }
 }
