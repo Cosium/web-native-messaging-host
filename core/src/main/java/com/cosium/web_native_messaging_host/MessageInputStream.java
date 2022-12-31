@@ -22,7 +22,7 @@ class MessageInputStream extends InputStream {
     if (cursorPosition >= messageLength) {
       return 0;
     }
-    return stdin.available();
+    return Math.min(stdin.available(), messageLength - cursorPosition);
   }
 
   @Override
