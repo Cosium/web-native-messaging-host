@@ -56,7 +56,7 @@ class Messages {
       if (Thread.currentThread().isInterrupted()) {
         throw new InterruptedException();
       }
-      Thread.sleep(50);
+      Thread.sleep(100);
     }
   }
 
