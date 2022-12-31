@@ -49,10 +49,11 @@ class MessageInputStreamTest {
   @DisplayName("read(byte[] buffer, int offset, int len)")
   void test4() throws IOException {
     MessageInputStream messageInputStream =
-        new MessageInputStream(createStdin("helloworld".getBytes(StandardCharsets.UTF_8)), 10);
+        new MessageInputStream(createStdin("helloworld".getBytes(StandardCharsets.UTF_8)), 9);
     byte[] buffer = new byte[9];
     messageInputStream.read(buffer, 0, 5);
     messageInputStream.read(buffer, 5, 4);
+    assertThat(messageInputStream.read()).isEqualTo(-1);
     assertThat(new String(buffer, StandardCharsets.UTF_8)).isEqualTo("helloworl");
   }
 
