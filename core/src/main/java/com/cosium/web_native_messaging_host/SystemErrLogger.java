@@ -36,7 +36,7 @@ class SystemErrLogger implements Logger {
   private void print(String level, String message, Throwable throwable) {
     requireNonNull(level, "level is mandatory");
     String log =
-        Stream.of(level, message)
+        Stream.of(level, SystemErrLogger.class.getCanonicalName(), message)
             .filter(Objects::nonNull)
             .filter(Predicate.not(String::isBlank))
             .collect(Collectors.joining(" "));
