@@ -8,7 +8,7 @@
 
   <groupId>com.cosium.web_native_messaging_host</groupId>
   <artifactId>web-native-messaging-host-parent</artifactId>
-  <version>1.2-SNAPSHOT</version>
+  <version>1.2</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -220,7 +220,7 @@
     <connection>scm:git:https://github.com/Cosium/web-native-messaging-host</connection>
     <developerConnection>scm:git:https://github.com/Cosium/web-native-messaging-host</developerConnection>
     <url>https://github.com/Cosium/web-native-messaging-host</url>
-    <tag>HEAD</tag>
+    <tag>1.2</tag>
   </scm>
 
   <organization>
