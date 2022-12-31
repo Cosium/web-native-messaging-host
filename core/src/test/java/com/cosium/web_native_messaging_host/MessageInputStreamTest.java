@@ -57,6 +57,14 @@ class MessageInputStreamTest {
     assertThat(new String(buffer, StandardCharsets.UTF_8)).isEqualTo("helloworl");
   }
 
+  @Test
+  @DisplayName("Consumes all scope on close")
+  void test5() throws IOException {
+    StdinLease stdin = createStdin("helloworld".getBytes(StandardCharsets.UTF_8));
+    new MessageInputStream(stdin, 4).close();
+    assertThat(stdin.available()).isEqualTo(6);
+  }
+
   private StdinLease createStdin(byte[] content) {
     return new MyStdinLease(new ByteArrayInputStream(content));
   }

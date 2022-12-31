@@ -87,23 +87,17 @@ class DefaultChannel implements CloseableChannel {
         messageHandler.onMessage(this, message);
       } catch (IOException e) {
         logger.warn(e.getMessage(), e);
+      } catch (RuntimeException e) {
+        logger.error(e.getMessage(), e);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         break;
-      } catch (RuntimeException e) {
-        logger.error(e.getMessage(), e);
-        break;
       }
     }
-    close(false);
   }
 
   @Override
   public void close() {
-    close(true);
-  }
-
-  private void close(boolean cancelStdinWatch) {
     Runnable shutdownHookRunnable = null;
     try {
       shutdownHookRunnable = shutdownHook.get();
@@ -111,18 +105,16 @@ class DefaultChannel implements CloseableChannel {
       logger.error(e.getMessage(), e);
     }
 
-    if (cancelStdinWatch) {
-      stdinWatch.cancel(true);
-      try {
-        stdinWatch.get();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        throw new RuntimeException(e);
-      } catch (ExecutionException e) {
-        logger.warn(e.getMessage(), e);
-      } catch (CancellationException ignored) {
-        // Do nothing
-      }
+    stdinWatch.cancel(true);
+    try {
+      stdinWatch.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      logger.warn(e.getMessage(), e);
+    } catch (CancellationException ignored) {
+      // Do nothing
     }
 
     stdinLease.close();

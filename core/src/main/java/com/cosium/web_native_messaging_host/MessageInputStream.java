@@ -44,4 +44,13 @@ class MessageInputStream extends InputStream {
     cursorPosition += byteRead;
     return byteRead;
   }
+
+  @Override
+  public void close() throws IOException {
+    int remaining = messageLength - cursorPosition;
+    if (remaining == 0) {
+      return;
+    }
+    readNBytes(remaining);
+  }
 }

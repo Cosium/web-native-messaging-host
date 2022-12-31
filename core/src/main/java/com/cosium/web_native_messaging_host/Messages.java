@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ContainerNode;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * @author Réda Housni Alaoui
@@ -26,28 +25,21 @@ class Messages {
   }
 
   public ContainerNode<?> read(StdinLease stdin) throws IOException, InterruptedException {
-    while (stdin.available() < 1) {
-      if (Thread.currentThread().isInterrupted()) {
-        throw new InterruptedException();
-      }
-      Thread.sleep(100);
-    }
+    waitWhile(() -> stdin.available() < MESSAGE_SIZE_LENGTH);
     byte[] rawLength = stdin.readNBytes(MESSAGE_SIZE_LENGTH);
     if (rawLength.length < MESSAGE_SIZE_LENGTH) {
       throw new IOException("End of stream reached");
     }
 
     int messageLength = new UInt32(rawLength).toInt();
+    waitWhile(() -> stdin.available() < messageLength);
 
-    MessageInputStream messageInputStream = new MessageInputStream(stdin, messageLength);
-    try {
+    try (MessageInputStream messageInputStream = new MessageInputStream(stdin, messageLength)) {
       JsonNode jsonNode = objectMapper.readTree(messageInputStream);
       if (!(jsonNode instanceof ContainerNode<?> message)) {
         throw new IOException("%s is not a %s".formatted(jsonNode, ContainerNode.class));
       }
       return message;
-    } finally {
-      consumeAndClose(messageInputStream);
     }
   }
 
@@ -59,9 +51,16 @@ class Messages {
     stdout.write(messageAsBytes);
   }
 
-  private void consumeAndClose(InputStream inputStream) throws IOException {
-    try (inputStream) {
-      inputStream.readAllBytes();
+  private void waitWhile(IOCondition condition) throws IOException, InterruptedException {
+    while (condition.isTruthy()) {
+      if (Thread.currentThread().isInterrupted()) {
+        throw new InterruptedException();
+      }
+      Thread.sleep(100);
     }
+  }
+
+  private interface IOCondition {
+    boolean isTruthy() throws IOException;
   }
 }
