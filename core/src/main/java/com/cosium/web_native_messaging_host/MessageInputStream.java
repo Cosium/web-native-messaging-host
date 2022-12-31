@@ -47,10 +47,6 @@ class MessageInputStream extends InputStream {
 
   @Override
   public void close() throws IOException {
-    int remaining = messageLength - cursorPosition;
-    if (remaining == 0) {
-      return;
-    }
-    readNBytes(remaining);
+    readAllBytes();
   }
 }
