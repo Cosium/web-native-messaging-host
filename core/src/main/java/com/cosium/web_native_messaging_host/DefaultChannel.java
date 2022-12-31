@@ -20,11 +20,11 @@ class DefaultChannel implements CloseableChannel {
 
   private final Messages messages;
   private final Supplier<Runnable> shutdownHook;
-  private final MessageHandler messageHandler;
   private final Logger logger;
   private final CloseableStdinLease stdinLease;
   private final CloseableStdoutLease stdoutLease;
   private final Future<?> stdinWatch;
+  private boolean closed;
 
   private DefaultChannel(
       ObjectMapper objectMapper,
@@ -36,13 +36,13 @@ class DefaultChannel implements CloseableChannel {
 
     this.messages = new Messages(objectMapper);
     this.shutdownHook = requireNonNull(shutdownHook);
-    this.messageHandler = requireNonNull(messageHandler);
     this.logger = requireNonNull(logger);
     this.stdinLease = stdin.startLease();
     this.stdoutLease = stdout.startLease();
 
     ExecutorService executorService = Executors.newSingleThreadExecutor();
-    stdinWatch = executorService.submit(this::watchStdin);
+    stdinWatch =
+        executorService.submit(new StdinWatch(this, messages, messageHandler, logger, stdinLease));
     executorService.shutdown();
   }
 
@@ -59,6 +59,9 @@ class DefaultChannel implements CloseableChannel {
 
   @Override
   public void sendMessage(ContainerNode<?> message) {
+    if (closed) {
+      throw new IllegalStateException("This channel is closed");
+    }
     try {
       logger.debug("Sending message %s".formatted(message), null);
       messages.write(message, stdoutLease);
@@ -79,25 +82,12 @@ class DefaultChannel implements CloseableChannel {
     }
   }
 
-  private void watchStdin() {
-    while (!Thread.currentThread().isInterrupted()) {
-      try {
-        ContainerNode<?> message = messages.read(stdinLease);
-        logger.debug("Received message %s".formatted(message), null);
-        messageHandler.onMessage(this, message);
-      } catch (IOException e) {
-        logger.warn(e.getMessage(), e);
-      } catch (RuntimeException e) {
-        logger.error(e.getMessage(), e);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        break;
-      }
-    }
-  }
-
   @Override
-  public void close() {
+  public synchronized void close() {
+    if (closed) {
+      return;
+    }
+    closed = true;
     Runnable shutdownHookRunnable = null;
     try {
       shutdownHookRunnable = shutdownHook.get();
@@ -120,5 +110,32 @@ class DefaultChannel implements CloseableChannel {
     stdinLease.close();
     stdoutLease.close();
     Optional.ofNullable(shutdownHookRunnable).ifPresent(Runnable::run);
+  }
+
+  private record StdinWatch(
+      Channel channel,
+      Messages messages,
+      MessageHandler messageHandler,
+      Logger logger,
+      StdinLease stdinLease)
+      implements Runnable {
+
+    @Override
+    public void run() {
+      while (!Thread.currentThread().isInterrupted()) {
+        try {
+          ContainerNode<?> message = messages.read(stdinLease);
+          logger.debug("Received message %s".formatted(message), null);
+          messageHandler.onMessage(channel, message);
+        } catch (IOException e) {
+          logger.warn(e.getMessage(), e);
+        } catch (RuntimeException e) {
+          logger.error(e.getMessage(), e);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+      }
+    }
   }
 }
