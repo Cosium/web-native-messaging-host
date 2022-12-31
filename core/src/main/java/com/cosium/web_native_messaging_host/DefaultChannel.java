@@ -77,8 +77,8 @@ class DefaultChannel implements CloseableChannel {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException(e);
-    } catch (ExecutionException e) {
-      throw new RuntimeException(e);
+    } catch (ExecutionException | CancellationException ignored) {
+      // Do nothing
     }
   }
 
