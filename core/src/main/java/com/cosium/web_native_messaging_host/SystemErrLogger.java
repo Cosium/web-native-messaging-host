@@ -42,10 +42,11 @@ class SystemErrLogger implements Logger {
             .collect(Collectors.joining(" "));
     System.err.print(log);
     Optional.ofNullable(throwable)
-        .ifPresent(
+        .ifPresentOrElse(
             t -> {
               System.err.print(" ");
               t.printStackTrace(System.err);
-            });
+            },
+            System.err::println);
   }
 }
