@@ -11,8 +11,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 class SystemStdin implements Stdin, CloseableStdinLease {
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
+  private final SystemFacade systemFacade;
   private InputStream genuineStdIn;
   private InputStream placeholder;
+
+  public SystemStdin() {
+    this(NativeSystem.INSTANCE);
+  }
+
+  public SystemStdin(SystemFacade systemFacade) {
+    this.systemFacade = systemFacade;
+  }
 
   @Override
   public CloseableStdinLease startLease() {
@@ -21,10 +30,10 @@ class SystemStdin implements Stdin, CloseableStdinLease {
       if (genuineStdIn != null) {
         throw new IllegalStateException("A lease is already in progress");
       }
-      genuineStdIn = System.in;
+      genuineStdIn = systemFacade.in();
       placeholder =
           new FailingInputStream("System.in is currently monopolized by %s.".formatted(this));
-      System.setIn(placeholder);
+      systemFacade.setIn(placeholder);
 
       return this;
     } finally {
@@ -91,13 +100,34 @@ class SystemStdin implements Stdin, CloseableStdinLease {
       if (genuineStdIn == null) {
         return;
       }
-      if (System.in.equals(placeholder)) {
-        System.setIn(genuineStdIn);
+      if (systemFacade.in().equals(placeholder)) {
+        systemFacade.setIn(genuineStdIn);
       }
       genuineStdIn = null;
       placeholder = null;
     } finally {
       readWriteLock.writeLock().unlock();
+    }
+  }
+
+  public interface SystemFacade {
+    InputStream in();
+
+    void setIn(InputStream inputStream);
+  }
+
+  private static class NativeSystem implements SystemFacade {
+
+    private static final NativeSystem INSTANCE = new NativeSystem();
+
+    @Override
+    public InputStream in() {
+      return System.in;
+    }
+
+    @Override
+    public void setIn(InputStream inputStream) {
+      System.setIn(inputStream);
     }
   }
 }
