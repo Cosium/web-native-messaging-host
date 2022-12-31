@@ -18,12 +18,30 @@ class MessageInputStream extends InputStream {
   }
 
   @Override
+  public int available() throws IOException {
+    if (cursorPosition >= messageLength) {
+      return 0;
+    }
+    return stdin.available();
+  }
+
+  @Override
   public int read() throws IOException {
     if (cursorPosition >= messageLength) {
       return -1;
     }
     int byteRead = stdin.read();
     cursorPosition++;
+    return byteRead;
+  }
+
+  @Override
+  public int read(byte[] buffer, int offset, int len) throws IOException {
+    if (cursorPosition >= messageLength) {
+      return -1;
+    }
+    int byteRead = stdin.read(buffer, offset, Math.min(len, messageLength - cursorPosition));
+    cursorPosition += byteRead;
     return byteRead;
   }
 }

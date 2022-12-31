@@ -109,7 +109,7 @@ class HostTest {
 
   @Test
   @DisplayName("Channel send messages to stdout")
-  void test7() throws IOException {
+  void test7() throws IOException, InterruptedException {
     ContainerNode<?> message =
         (ContainerNode<?>)
             objectMapper.readTree(
@@ -165,13 +165,23 @@ class HostTest {
     }
 
     @Override
+    public int available() throws IOException {
+      return inputStream.available();
+    }
+
+    @Override
     public int read() throws IOException {
       return inputStream.read();
     }
 
     @Override
-    public int read(byte[] buffer) throws IOException {
-      return inputStream.read(buffer);
+    public int read(byte[] buffer, int off, int len) throws IOException {
+      return inputStream.read(buffer, off, len);
+    }
+
+    @Override
+    public byte[] readNBytes(int len) throws IOException {
+      return inputStream.readNBytes(len);
     }
 
     @Override

@@ -13,6 +13,8 @@ import java.io.InputStream;
  */
 class Messages {
 
+  private static final int MESSAGE_SIZE_LENGTH = 4;
+
   private final ObjectMapper objectMapper;
 
   public Messages() {
@@ -23,19 +25,27 @@ class Messages {
     this.objectMapper = requireNonNull(objectMapper);
   }
 
-  public ContainerNode<?> read(StdinLease stdin) throws IOException {
-    byte[] rawLength = new byte[4];
-    stdin.read(rawLength);
+  public ContainerNode<?> read(StdinLease stdin) throws IOException, InterruptedException {
+    while (stdin.available() < 1) {
+      if (Thread.currentThread().isInterrupted()) {
+        throw new InterruptedException();
+      }
+      Thread.sleep(100);
+    }
+    byte[] rawLength = stdin.readNBytes(MESSAGE_SIZE_LENGTH);
+    if (rawLength.length < MESSAGE_SIZE_LENGTH) {
+      throw new IOException("End of stream reached");
+    }
+
     int messageLength = new UInt32(rawLength).toInt();
 
     MessageInputStream messageInputStream = new MessageInputStream(stdin, messageLength);
     try {
       JsonNode jsonNode = objectMapper.readTree(messageInputStream);
-      if (!(jsonNode instanceof ContainerNode<?> containerNode)) {
-        throw new IllegalArgumentException(
-            "%s is not a %s".formatted(jsonNode, ContainerNode.class));
+      if (!(jsonNode instanceof ContainerNode<?> message)) {
+        throw new IOException("%s is not a %s".formatted(jsonNode, ContainerNode.class));
       }
-      return containerNode;
+      return message;
     } finally {
       consumeAndClose(messageInputStream);
     }

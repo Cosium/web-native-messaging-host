@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ContainerNode;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -86,12 +87,23 @@ class DefaultChannel implements CloseableChannel {
         messageHandler.onMessage(this, message);
       } catch (IOException e) {
         logger.warn(e.getMessage(), e);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      } catch (RuntimeException e) {
+        logger.error(e.getMessage(), e);
+        break;
       }
     }
+    close(false);
   }
 
   @Override
   public void close() {
+    close(true);
+  }
+
+  private void close(boolean cancelStdinWatch) {
     Runnable shutdownHookRunnable = null;
     try {
       shutdownHookRunnable = shutdownHook.get();
@@ -99,7 +111,20 @@ class DefaultChannel implements CloseableChannel {
       logger.error(e.getMessage(), e);
     }
 
-    stdinWatch.cancel(true);
+    if (cancelStdinWatch) {
+      stdinWatch.cancel(true);
+      try {
+        stdinWatch.get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException(e);
+      } catch (ExecutionException e) {
+        logger.warn(e.getMessage(), e);
+      } catch (CancellationException ignored) {
+        // Do nothing
+      }
+    }
+
     stdinLease.close();
     stdoutLease.close();
     Optional.ofNullable(shutdownHookRunnable).ifPresent(Runnable::run);

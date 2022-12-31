@@ -33,6 +33,19 @@ class SystemStdin implements Stdin, CloseableStdinLease {
   }
 
   @Override
+  public int available() throws IOException {
+    readWriteLock.readLock().lock();
+    try {
+      if (genuineStdIn == null) {
+        throw new UnsupportedOperationException("No lease in progress");
+      }
+      return genuineStdIn.available();
+    } finally {
+      readWriteLock.readLock().unlock();
+    }
+  }
+
+  @Override
   public int read() throws IOException {
     readWriteLock.readLock().lock();
     try {
@@ -46,13 +59,26 @@ class SystemStdin implements Stdin, CloseableStdinLease {
   }
 
   @Override
-  public int read(byte[] buffer) throws IOException {
+  public int read(byte[] buffer, int off, int len) throws IOException {
     readWriteLock.readLock().lock();
     try {
       if (genuineStdIn == null) {
         throw new UnsupportedOperationException("No lease in progress");
       }
-      return genuineStdIn.read(buffer);
+      return genuineStdIn.read(buffer, off, len);
+    } finally {
+      readWriteLock.readLock().unlock();
+    }
+  }
+
+  @Override
+  public byte[] readNBytes(int len) throws IOException {
+    readWriteLock.readLock().lock();
+    try {
+      if (genuineStdIn == null) {
+        throw new UnsupportedOperationException("No lease in progress");
+      }
+      return genuineStdIn.readNBytes(len);
     } finally {
       readWriteLock.readLock().unlock();
     }
