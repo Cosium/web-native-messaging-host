@@ -141,6 +141,7 @@
           <releaseProfiles>release</releaseProfiles>
           <goals>deploy</goals>
           <tagNameFormat>@{project.version}</tagNameFormat>
+          <preparationGoals>clean</preparationGoals>
         </configuration>
       </plugin>
       <plugin>
