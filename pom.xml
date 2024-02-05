@@ -26,7 +26,7 @@
     <junit.version>5.10.1</junit.version>
     <assertj>3.25.2</assertj>
 
-    <git-code-format-maven-plugin.version>5.0</git-code-format-maven-plugin.version>
+    <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
   </properties>
 
   <dependencyManagement>
