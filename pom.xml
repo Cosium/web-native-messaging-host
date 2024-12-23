@@ -24,7 +24,7 @@
     <jackson.version>2.18.2</jackson.version>
 
     <junit.version>5.11.4</junit.version>
-    <assertj>3.26.3</assertj>
+    <assertj>3.27.0</assertj>
 
     <git-code-format-maven-plugin.version>5.3</git-code-format-maven-plugin.version>
   </properties>
