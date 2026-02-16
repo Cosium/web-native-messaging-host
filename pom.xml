@@ -23,7 +23,7 @@
 
     <jackson.version>2.21.0</jackson.version>
 
-    <junit.version>6.0.2</junit.version>
+    <junit.version>6.0.3</junit.version>
     <assertj>3.27.7</assertj>
 
     <git-code-format-maven-plugin.version>5.4</git-code-format-maven-plugin.version>
